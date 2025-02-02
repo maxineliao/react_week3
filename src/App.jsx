@@ -39,7 +39,6 @@ function App() {
 
 	const modalRef = useRef(null);
 	const productModalRef = useRef(null);
-    const initialRenderRef = useRef(true);
 
 	//登入頁
 	const handleLoginInputChange = (e) => {
