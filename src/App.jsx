@@ -39,6 +39,8 @@ function App() {
 
 	const modalRef = useRef(null);
 	const productModalRef = useRef(null);
+	const delModalRef = useRef(null);
+	const deleteModalRef = useRef(null);
 
 	//登入頁
 	const handleLoginInputChange = (e) => {
@@ -80,6 +82,7 @@ function App() {
 		);
 		axios.defaults.headers.common.Authorization = token;
 		productModalRef.current = new Modal(modalRef.current);
+		delModalRef.current = new Modal(deleteModalRef.current);
 		checkAdmin();
         setProductToDelete('');
 	}, []);
@@ -125,16 +128,23 @@ function App() {
         productModalRef.current.show();
     };
     //關閉Modal
-    const dismissProductModal = ()=>{
+    const dismissProductModal = ()=> {
         productModalRef.current.hide();
     }
     
+	const openDeleteModal = ()=> {
+		delModalRef.current.show();
+	}
+	const dismissDeleteModal = ()=> {
+		delModalRef.current.hide();
+	}
+
     //處理Modal內資料
     const handleModalInputChange = (e) => {
 		const { id, value, checked, type } = e.target;
 		setTempProduct((prevData) => ({
 			...prevData,
-			[id]: type ==="checkbox" ? checked : type ==='number' ? Number(value) : value,
+			[id]: type ==="checkbox" ? (checked ? 1 : 0) : type ==='number' ? Number(value) : value,
 		}));
 	};
     //處理Modal內副圖資料
@@ -191,19 +201,16 @@ function App() {
         }
     }
     //刪除商品api
-    const deleteProduct = async()=>{
+    const deleteProduct = async(id)=>{
         try {
             const res = await axios.delete(`${VITE_API_BASE}/api/${VITE_API_PATH}/admin/product/${productToDelete}`)
             await getProductList();
             alert('刪除商品成功！');
+			dismissDeleteModal();
         } catch (error) {
             alert(`刪除商品失敗：${error.response.data.message}`)
         }
     }
-    useEffect(()=>{
-        if (!productToDelete) return;
-        deleteProduct();
-    },[productToDelete])
 
 	return (
 		<>
@@ -215,7 +222,6 @@ function App() {
 								type="button"
 								className="btn btn-primary"
 								onClick={()=>{
-                                    setIsNewProduct(true);
                                     openProductModal()
                                 }}
 							>
@@ -261,7 +267,7 @@ function App() {
 														className="btn btn-outline-primary btn-sm"
                                                         onClick={()=>{
                                                             setIsNewProduct(false);
-                                                            openProductModal(item)
+                                                            openProductModal(item);
                                                         }}
 													>
 														編輯
@@ -269,7 +275,11 @@ function App() {
 													<button
 														type="button"
 														className="btn btn-outline-danger btn-sm"
-                                                        onClick={()=>{setProductToDelete(`${item.id}`)}}
+                                                        onClick={
+															()=>{
+																setProductToDelete(`${item.id}`);
+																openDeleteModal();
+															}}
 													>
 														刪除
 													</button>
@@ -574,6 +584,23 @@ function App() {
 								確認
 							</button>
 						</div>
+					</div>
+				</div>
+			</div>
+			<div className="modal" tabIndex="-1" ref={deleteModalRef}>
+				<div className="modal-dialog">
+					<div className="modal-content">
+					<div className="modal-header">
+						<h5 className="modal-title">刪除商品</h5>
+						<button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div className="modal-body">
+						<p>刪除商品後無法復原，確認要刪除嗎？</p>
+					</div>
+					<div className="modal-footer">
+						<button type="button" className="btn btn-outline-secondary" onClick={dismissDeleteModal}>取消</button>
+						<button type="button" className="btn btn-danger" onClick={()=>{deleteProduct(productToDelete)}}>刪除</button>
+					</div>
 					</div>
 				</div>
 			</div>
